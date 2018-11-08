@@ -1,6 +1,5 @@
 
 library(tidyverse)
-library(httr)
 
 # pulling data
 
@@ -9,4 +8,9 @@ mass_shooting <-
 
 # getting US geo data
 
-us <- maps::map_data("usa")
+states <- map_data("state")
+
+s_map <- states %>% 
+  ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group), color = "white") + 
+  theme_void()
