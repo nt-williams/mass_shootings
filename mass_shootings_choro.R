@@ -147,10 +147,10 @@ ani_map <- mass_location_2 %>%
        caption = "Data source: Stanford Mass Shootings in America, courtesy of the Stanford Geospatial Center and Stanford Libraries") +
   theme_void() + 
   coord_map() + 
+  labs(title = 'Year: {closest_state}') +
   transition_states(year,
                     transition_length = 2, 
                     state_length = 1) + 
   ease_aes('linear')
   
 animate(ani_map, fps = 3)
-
