@@ -1,6 +1,6 @@
 
 library(tidyverse)
-library(lubridate)
+library(viridis)
 
 # pulling and manipulating mass shooting data
 
@@ -23,13 +23,27 @@ states <- map_data("state") %>%
 
 # joing US and shooting data
 
-mass_location <- left_join(states, mass_shooting, by = "state")
+mass_counts <- mass_shooting %>% 
+  group_by(state) %>% 
+  summarise(n = n())
+
+mass_location <- left_join(states, mass_counts, by = "state") %>% 
+  mutate(n = ifelse(is.na(n), 0, n))
 
 # blank US map
 
-s_map <- states %>% 
+mass_location %>% 
   ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white") + 
-  theme_void()
+  geom_polygon(aes(x = long, y = lat, fill = n, group = group), color = NA, alpha = 0.9) + 
+  scale_fill_viridis(breaks = c(0, 5, 10, 15, 20, 25, 30, 35, 40), 
+                     name = "Number of mass shootings", 
+                     guide = guide_legend(keyheight = unit(2.5, units = "mm"), 
+                                          keywidth = unit(6, units = "mm"), 
+                                          label.position = "bottom", 
+                                          title.position = 'top', nrow = 1)) +
+  theme_void() + 
+  coord_map() + 
+  theme(plot.background = element_rect(fill = "#f5f5f2", color = NA), 
+        legend.position = c(0.2, 0.09))
 
 
