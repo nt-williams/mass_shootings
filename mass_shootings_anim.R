@@ -1,6 +1,7 @@
-library(magick)
+
 library(tidyverse)
 library(viridis)
+library(magick)
 
 # importing and cleaning shooting data
 
@@ -50,7 +51,7 @@ mass_location <- bind_rows(mass_location)
 
 shooting_map <- function(yr) {
   
-  mass_location_2 %>% 
+  mass_location %>% 
     filter(year == yr) %>% 
     ggplot() + 
     geom_polygon(aes(x = long, y = lat, fill = n, group = group), color = NA, alpha = 0.8) + 
