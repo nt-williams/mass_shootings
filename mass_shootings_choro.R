@@ -63,6 +63,8 @@ mass_counts_location %>%
         plot.title = element_text(size = 13, hjust = 0.01, color = "#4e4d47", 
                                   margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")))
 
+ggsave("total_shootings.png")
+
 mass_vic_location %>% 
   ggplot() + 
   geom_polygon(aes(x = long, y = lat, fill = total_vic, group = group), color = NA, alpha = 0.9) + 
@@ -84,3 +86,4 @@ mass_vic_location %>%
         plot.title = element_text(size = 13, hjust = 0.01, color = "#4e4d47", 
                                   margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")))
 
+ggsave("total_victims.png")

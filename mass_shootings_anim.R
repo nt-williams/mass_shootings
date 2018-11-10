@@ -55,7 +55,7 @@ shooting_map <- function(yr) {
     filter(year == yr) %>% 
     ggplot() + 
     geom_polygon(aes(x = long, y = lat, fill = n, group = group), color = NA, alpha = 0.8) + 
-    labs(title = "Number of mass shootings in the 48 continguous states", 
+    labs(title = "Number of victims due to mass shootings in the 48 continguous states", 
          caption = "Source: Stanford Mass Shootings in America, courtesy of the Stanford Geospatial Center and Stanford Libraries", 
          subtitle = paste("Year:", yr, sep = " ")) +
     scale_fill_viridis(name = "Number of victims", 
