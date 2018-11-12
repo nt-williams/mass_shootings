@@ -2,6 +2,7 @@
 library(tidyverse)
 library(viridis)
 library(magick)
+library(googlesheets)
 
 # importing and cleaning shooting data
 
@@ -18,6 +19,12 @@ mass_shooting <-
          year = substring(year , 7, 10), 
          year = as_factor(year), 
          state = str_to_lower(state))
+
+# google sheet data from mother jones
+
+mother_j <- gs_url("https://docs.google.com/spreadsheets/d/1b9o6uDO18sLxBqPwl_Gh9bnhW-ev_dABH83M5Vb5L8o/edit#gid=0")
+
+mother_j <- gs_read(mother_j)
 
 # US geo data
 
