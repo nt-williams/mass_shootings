@@ -25,9 +25,11 @@ mass_shooting <-
 
 s_tracker_2017 <- read_csv("./data/shooting_tracker_2017.csv") %>% 
   janitor::clean_names() %>% 
-  separate(incident_date, into = c("day", "year"), sep = ",") %>% 
+  separate(incident_date, into = c("day", "year"), sep = ", ") %>% 
   mutate(num_victim = number_killed + number_injured, 
-         count = 1) %>% 
+         count = 1, 
+         state = str_to_lower(state), 
+         year = as_factor(year)) %>% 
   rename(num_fatal = number_killed, 
          city = city_or_county) %>% 
   select(year, city, state, count, num_fatal, num_victim)
@@ -38,21 +40,34 @@ base <- "https://www.gunviolencearchive.org/reports/mass-shooting?page="
 
 url_pages <- str_c(base, 0:12)
 
-s_tracker_2018 <- read_html(url_pages[1]) %>% 
-  html_nodes(css = "table") %>% 
-  .[[1]] %>% 
-  html_table() %>% 
-  as_tibble()
+s_tracker_2018 <- list()
 
-# google sheet data from mother jones
+for (i in 1:length(url_pages)) {
+  s_tracker_2018[[i]] <- read_html(url_pages[i]) %>% 
+    html_nodes(css = "table") %>% 
+    .[[1]] %>% 
+    html_table() %>% 
+    as_tibble() %>% 
+    janitor::clean_names() %>% 
+    separate(incident_date, into = c("day", "year"), sep = ", ") %>% 
+    mutate(num_victim = number_killed + number_injured, 
+           count = 1, 
+           state = str_to_lower(state), 
+           year = as_factor(year)) %>% 
+    rename(num_fatal = number_killed, 
+           city = city_or_county) %>% 
+    select(year, city, state, count, num_fatal, num_victim)
+}
 
-mother_j <- gs_url("https://docs.google.com/spreadsheets/d/1b9o6uDO18sLxBqPwl_Gh9bnhW-ev_dABH83M5Vb5L8o/edit#gid=0")
+s_tracker_2018 <- bind_rows(s_tracker_2018)
 
-mo_j <- gs_read(mother_j) %>% 
-  select(location, date, fatalities, total_victims) %>% 
-  separate(location, into = c("city", "state"), sep = ",") %>% 
-  mutate(year = str_pad(date, width = 10, side = "left", "0"),
-         year = substring(year, 7, 10))
+# adding shooting tracker data to stanford data
+
+mass_shooting <- mass_shooting %>% 
+  bind_rows(s_tracker_2017) %>% 
+  bind_rows(s_tracker_2018) %>% 
+  mutate(year = as_factor(year),
+         year = fct_relevel(year, "2017", "2018", after = Inf)) 
 
 # US geo data
 
@@ -113,7 +128,7 @@ shooting_map <- function(yr) {
           plot.subtitle = element_text(size = 8, hjust = 0.006, color = "#4e4d47", 
                                        margin = margin(b = -0.1, t = 0.25, l = 10, unit = "cm"))) -> mp
   
-  file_out <- sprintf("mp-ms-%s.png", yr)
+  file_out <- sprintf("mp-ms2-%s.png", yr)
   ggsave(file_out, mp, width = 8, height = 5)
   
   file_out
@@ -126,7 +141,7 @@ year %>%
   purrr::map(image_read) %>% 
   image_join() %>% 
   image_animate(fps = 2) %>% 
-  image_write("shooting.gif")
+  image_write("shooting2.gif")
   
   
 
