@@ -2,6 +2,7 @@
 library(tidyverse)
 library(viridis)
 library(magick)
+library(rvest)
 library(googlesheets)
 
 # importing and cleaning shooting data
@@ -20,11 +21,38 @@ mass_shooting <-
          year = as_factor(year), 
          state = str_to_lower(state))
 
+# shooting tracker data 2017
+
+s_tracker_2017 <- read_csv("./data/shooting_tracker_2017.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(incident_date, into = c("day", "year"), sep = ",") %>% 
+  mutate(num_victim = number_killed + number_injured, 
+         count = 1) %>% 
+  rename(num_fatal = number_killed, 
+         city = city_or_county) %>% 
+  select(year, city, state, count, num_fatal, num_victim)
+
+# shooting tracker data 2018, begins '18 isn't completed, pulling data directly from URl for ease of updating
+
+base <- "https://www.gunviolencearchive.org/reports/mass-shooting?page="
+
+url_pages <- str_c(base, 0:12)
+
+s_tracker_2018 <- read_html(url_pages[1]) %>% 
+  html_nodes(css = "table") %>% 
+  .[[1]] %>% 
+  html_table() %>% 
+  as_tibble()
+
 # google sheet data from mother jones
 
 mother_j <- gs_url("https://docs.google.com/spreadsheets/d/1b9o6uDO18sLxBqPwl_Gh9bnhW-ev_dABH83M5Vb5L8o/edit#gid=0")
 
-mother_j <- gs_read(mother_j)
+mo_j <- gs_read(mother_j) %>% 
+  select(location, date, fatalities, total_victims) %>% 
+  separate(location, into = c("city", "state"), sep = ",") %>% 
+  mutate(year = str_pad(date, width = 10, side = "left", "0"),
+         year = substring(year, 7, 10))
 
 # US geo data
 
