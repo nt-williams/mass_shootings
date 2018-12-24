@@ -23,52 +23,52 @@ mass_shooting <-
 
 # shooting tracker data 2017
 
-s_tracker_2017 <- read_csv("./data/shooting_tracker_2017.csv") %>% 
-  janitor::clean_names() %>% 
-  separate(incident_date, into = c("day", "year"), sep = ", ") %>% 
-  mutate(num_victim = number_killed + number_injured, 
-         count = 1, 
-         state = str_to_lower(state), 
-         year = as_factor(year)) %>% 
-  rename(num_fatal = number_killed, 
-         city = city_or_county) %>% 
-  select(year, city, state, count, num_fatal, num_victim)
-
-# shooting tracker data 2018, begins '18 isn't completed, pulling data directly from URl for ease of updating
-
-base <- "https://www.gunviolencearchive.org/reports/mass-shooting?page="
-
-url_pages <- str_c(base, 0:12)
-
-s_tracker_2018 <- list()
-
-for (i in 1:length(url_pages)) {
-  s_tracker_2018[[i]] <- read_html(url_pages[i]) %>% 
-    html_nodes(css = "table") %>% 
-    .[[1]] %>% 
-    html_table() %>% 
-    as_tibble() %>% 
-    janitor::clean_names() %>% 
-    separate(incident_date, into = c("day", "year"), sep = ", ") %>% 
-    mutate(num_victim = number_killed + number_injured, 
-           count = 1, 
-           state = str_to_lower(state), 
-           year = as_factor(year)) %>% 
-    rename(num_fatal = number_killed, 
-           city = city_or_county) %>% 
-    select(year, city, state, count, num_fatal, num_victim)
-}
-
-s_tracker_2018 <- bind_rows(s_tracker_2018)
-
-# adding shooting tracker data to stanford data
-
-mass_shooting <- mass_shooting %>% 
-  bind_rows(s_tracker_2017) %>% 
-  bind_rows(s_tracker_2018) %>% 
-  mutate(year = as_factor(year),
-         year = fct_relevel(year, "1966", "1971"), 
-         year = fct_relevel(year, "2017", "2018", after = Inf)) 
+# s_tracker_2017 <- read_csv("./data/shooting_tracker_2017.csv") %>% 
+#   janitor::clean_names() %>% 
+#   separate(incident_date, into = c("day", "year"), sep = ", ") %>% 
+#   mutate(num_victim = number_killed + number_injured, 
+#          count = 1, 
+#          state = str_to_lower(state), 
+#          year = as_factor(year)) %>% 
+#   rename(num_fatal = number_killed, 
+#          city = city_or_county) %>% 
+#   select(year, city, state, count, num_fatal, num_victim)
+# 
+# # shooting tracker data 2018, begins '18 isn't completed, pulling data directly from URl for ease of updating
+# 
+# base <- "https://www.gunviolencearchive.org/reports/mass-shooting?page="
+# 
+# url_pages <- str_c(base, 0:12)
+# 
+# s_tracker_2018 <- list()
+# 
+# for (i in 1:length(url_pages)) {
+#   s_tracker_2018[[i]] <- read_html(url_pages[i]) %>% 
+#     html_nodes(css = "table") %>% 
+#     .[[1]] %>% 
+#     html_table() %>% 
+#     as_tibble() %>% 
+#     janitor::clean_names() %>% 
+#     separate(incident_date, into = c("day", "year"), sep = ", ") %>% 
+#     mutate(num_victim = number_killed + number_injured, 
+#            count = 1, 
+#            state = str_to_lower(state), 
+#            year = as_factor(year)) %>% 
+#     rename(num_fatal = number_killed, 
+#            city = city_or_county) %>% 
+#     select(year, city, state, count, num_fatal, num_victim)
+# }
+# 
+# s_tracker_2018 <- bind_rows(s_tracker_2018)
+# 
+# # adding shooting tracker data to stanford data
+# 
+# mass_shooting <- mass_shooting %>% 
+#   bind_rows(s_tracker_2017) %>% 
+#   bind_rows(s_tracker_2018) %>% 
+#   mutate(year = as_factor(year),
+#          year = fct_relevel(year, "1966", "1971"), 
+#          year = fct_relevel(year, "2017", "2018", after = Inf)) 
 
 # US geo data
 
