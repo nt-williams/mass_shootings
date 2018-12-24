@@ -98,9 +98,47 @@ for (i in names(mass_victims)) {
 
 mass_location <- bind_rows(mass_location)
 
+# percent increase
+
+vic_year <- mass_shooting %>% 
+  group_by(year) %>% 
+  summarize(total_year = sum(num_victim))
+
+vic_year <- vic_year %>% 
+  mutate(change = total_year - 54) %>% 
+  mutate(perc_change = round((change / 54 * 100)), 
+         perc_change = as.character(perc_change), 
+         perc_change = paste0(perc_change, "%"))
+
+perc_change <- function(yr) {
+  
+  vic_year %>% 
+    mutate(x = 1.5, 
+           y = 1.5) %>% 
+    filter(year == yr) %>% 
+    ggplot(aes(x, y)) + 
+    geom_text(aes(label = perc_change), size = 4, color = "#4e4d47") + 
+    theme_void() + 
+    theme(plot.background = element_rect(fill = "#f0f0f0", color = NA), 
+          plot.margin = grid::unit(c(0, 0, 0, 0), "mm")) -> mp
+  
+  file_out <- sprintf("perc_change/ms-change-%s.png", yr)
+  ggsave(file_out, mp, width = 0.5, height = 0.5, device = "png")
+  
+}
+
+year <- sort(levels(mass_shooting$year))
+
+year %>% 
+  purrr::map(perc_change)
+
 # Making gif
 
 shooting_map <- function(yr) {
+  
+  file_in <- sprintf("perc_change/ms-change-%s.png", yr)
+  change <- image_read(file_in) %>% 
+    image_trim()
   
   mass_location %>% 
     filter(year == yr) %>% 
@@ -115,8 +153,8 @@ shooting_map <- function(yr) {
                                               title.position = 'top', nrow = 1, 
                                               ticks = FALSE),
                        limits = c(0, 160)) + 
-    theme_void() + 
     coord_map(projection = "albers", lat0 = 30, lat1 = 40) + 
+    theme_void() +
     theme(plot.background = element_rect(fill = "#f0f0f0", color = NA), 
           legend.position = c(0.15, 0.09), 
           legend.direction = "horizontal", 
@@ -129,19 +167,29 @@ shooting_map <- function(yr) {
           plot.subtitle = element_text(size = 8, hjust = 0.037, color = "#4e4d47", 
                                        margin = margin(b = -0.1, t = 0.25, l = 2, unit = "cm"))) -> mp
   
+  # mp <- mp + 
+  #   annotate("text", x = -50, y = 50, label = "test")
+  # 
+  # mp
+  
   file_out <- sprintf("mp-ms-%s.png", yr)
   ggsave(file_out, mp, width = 8, height = 5)
+  
+  fig <- image_read(sprintf("mp-ms-%s.png", yr))
+  finish <- image_composite(fig, change, offset = "+2150+90")
+  
+  image_write(finish, file_out)
   
   file_out
 }
 
-year <- sort(levels(mass_shooting$year))
+shooting_map("2016")
 
 year %>% 
   purrr::map(shooting_map) %>% 
   purrr::map(image_read) %>% 
   image_join() %>% 
-  image_animate(fps = 2) %>% 
+  image_animate(fps = 2, loop = 1) %>% 
   image_write("shooting.gif")
   
 # gif with new years
