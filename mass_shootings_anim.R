@@ -4,6 +4,7 @@ library(viridis)
 library(magick)
 library(rvest)
 library(googlesheets)
+library(stringr)
 
 # importing and cleaning shooting data
 
@@ -117,7 +118,7 @@ perc_change <- function(yr) {
            y = 1.5) %>% 
     filter(year == yr) %>% 
     ggplot(aes(x, y)) + 
-    geom_text(aes(label = perc_change), size = 4, color = "#4e4d47") + 
+    geom_text(aes(label = perc_change), size = 3.5, color = "#4e4d47") + 
     theme_void() + 
     theme(plot.background = element_rect(fill = "#f0f0f0", color = NA), 
           plot.margin = grid::unit(c(0, 0, 0, 0), "mm")) -> mp
@@ -132,12 +133,26 @@ year <- sort(levels(mass_shooting$year))
 year %>% 
   purrr::map(perc_change)
 
+label <- tibble(x = 1.5, 
+                y = 1.5)
+
+label %>% 
+  ggplot(aes(x, y)) + 
+  geom_text(aes(label = "Change since 1966:"), size = 3.5, color = "#4e4d47") + 
+  theme_void() + 
+  theme(plot.background = element_rect(fill = "#f0f0f0", color = NA), 
+        plot.margin = grid::unit(c(0, 0, 0, 0), "mm")) -> lbl
+
+ggsave("lbl.png", lbl, width = 1.25, height = 0.5, device = "png")
+
 # Making gif
 
 shooting_map <- function(yr) {
   
   file_in <- sprintf("perc_change/ms-change-%s.png", yr)
   change <- image_read(file_in) %>% 
+    image_trim()
+  lbl <- image_read("lbl.png") %>% 
     image_trim()
   
   mass_location %>% 
@@ -176,20 +191,22 @@ shooting_map <- function(yr) {
   ggsave(file_out, mp, width = 8, height = 5)
   
   fig <- image_read(sprintf("mp-ms-%s.png", yr))
-  finish <- image_composite(fig, change, offset = "+2150+90")
+  finish_1 <- image_composite(fig, change, offset = "+2200+90")
+  finish_2 <- image_composite(finish_1, lbl, offset = "+1840+90")
   
-  image_write(finish, file_out)
+  image_write(finish_2, file_out)
   
   file_out
 }
 
-shooting_map("2016")
+shooting_map("2016") %>% 
+  image_read()
 
 year %>% 
   purrr::map(shooting_map) %>% 
   purrr::map(image_read) %>% 
   image_join() %>% 
-  image_animate(fps = 2, loop = 1) %>% 
+  image_animate(fps = 2, loop = 2) %>% 
   image_write("shooting.gif")
   
 # gif with new years
